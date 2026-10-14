@@ -4,9 +4,9 @@
   "description": "Riptide — a fast, multi-connection download manager with queueing, scheduling, categories and auto-update.",
   "author": {
     "name": "Riptide",
-    "email": "you@example.com"
+    "email": "sjjj2226@gmail.com"
   },
-  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/riptide",
+  "homepage": "https://github.com/Mrpough/riptide",
   "license": "MIT",
   "main": "./out/main/index.js",
   "scripts": {

@@ -57,10 +57,10 @@ linux:
   category: Network
   artifactName: ${productName}-${version}-${arch}.${ext}
 
-# Used by electron-updater. Replace owner/repo with your GitHub repository.
+# Used by electron-updater. Releases are published to this GitHub repository.
 # The release must be built with a GH_TOKEN that can create releases.
 publish:
   provider: github
-  owner: YOUR_GITHUB_USERNAME
+  owner: Mrpough
   repo: riptide
   releaseType: release
