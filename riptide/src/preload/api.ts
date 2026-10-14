@@ -3,6 +3,7 @@ import type {
   AddDownloadInput,
   AddResult,
   AppInfo,
+  BrowserBridgeInfo,
   DiskUsage,
   DownloadView,
   Notice,
@@ -65,6 +66,10 @@ export interface RiptideApi {
     diskUsage(): Promise<DiskUsage | null>
     openLogs(): Promise<boolean>
     setLaunchOnStartup(enabled: boolean): Promise<boolean>
+    /** Status of the loopback endpoint the browser extension uses. */
+    browserBridge(): Promise<BrowserBridgeInfo>
+    /** Reveal the unpacked extension folder in the OS file manager. */
+    openExtensionFolder(): Promise<{ ok: boolean; error?: string }>
   }
   update: {
     state(): Promise<UpdateState>

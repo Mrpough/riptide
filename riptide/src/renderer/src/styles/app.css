@@ -968,6 +968,47 @@
   color: var(--text-faint);
 }
 
+.settings__section code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.bridge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.bridge__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  box-shadow: 0 0 0 3px var(--idle-wash);
+}
+
+.bridge[data-state='on'] {
+  color: var(--text);
+}
+
+.bridge[data-state='on'] .bridge__dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px var(--ok-wash);
+}
+
+.bridge[data-state='off'] .bridge__dot {
+  background: var(--err);
+  box-shadow: 0 0 0 3px var(--err-wash);
+}
+
 /* ------------------------------------------------------------------ toasts */
 
 .toasts {

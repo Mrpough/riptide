@@ -213,6 +213,18 @@ export interface AppInfo {
   downloadDir: string
 }
 
+/** Status of the loopback bridge the browser extension talks to. */
+export interface BrowserBridgeInfo {
+  /** Whether the catch endpoint is currently listening. */
+  running: boolean
+  /** Port the endpoint is bound to, or the configured port when stopped. */
+  port: number
+  /** Full URL the extension POSTs downloads to. */
+  endpoint: string
+  /** Absolute path of the unpacked extension folder, for "Load unpacked". */
+  extensionPath: string
+}
+
 export type UpdateStage =
   | 'idle'
   | 'checking'

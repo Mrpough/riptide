@@ -1,0 +1,244 @@
+/*
+ * Riptide popup styling. Kept intentionally close to the desktop theme tokens
+ * (graphite chassis, one signal orange) without importing the app stylesheet.
+ */
+
+:root {
+  --bg: #14171c;
+  --panel: #1f242c;
+  --panel-2: #262c35;
+  --line: #2c333d;
+  --text: #e9ebef;
+  --text-dim: #9aa3af;
+  --text-faint: #667182;
+  --accent: #ff6a2b;
+  --accent-hi: #ff8a52;
+  --ok: #34d399;
+  --err: #f0554a;
+  --r-sm: 5px;
+  --r-md: 8px;
+  --font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- header --------------------------------------------------------------- */
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #1b2027, #171b21);
+  border-bottom: 1px solid var(--line);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-md);
+  color: var(--accent);
+  background: rgba(255, 106, 43, 0.12);
+  border: 1px solid rgba(255, 106, 43, 0.28);
+}
+
+.head__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.head__text strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  box-shadow: 0 0 0 3px rgba(102, 113, 130, 0.14);
+  flex: none;
+}
+
+.status[data-state='on'] .dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.16);
+}
+
+.status[data-state='off'] .dot {
+  background: var(--err);
+  box-shadow: 0 0 0 3px rgba(240, 85, 74, 0.16);
+}
+
+.retry {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.retry:hover {
+  color: var(--text);
+  border-color: #3a434f;
+}
+
+/* ---- body ----------------------------------------------------------------- */
+
+.body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: -4px;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 106, 43, 0.14);
+}
+
+.input--short {
+  width: 110px;
+}
+
+.btn {
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #1a1207;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-hi);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.message {
+  margin: 0;
+  min-height: 15px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.message[data-tone='success'] {
+  color: var(--ok);
+}
+
+.message[data-tone='error'] {
+  color: var(--err);
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 2px 0;
+}
+
+/* ---- options -------------------------------------------------------------- */
+
+.switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.switch input {
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.switch__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.switch__title {
+  font-size: 13px;
+}
+
+.switch__desc {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.help {
+  font-size: 11px;
+  color: var(--text-faint);
+}

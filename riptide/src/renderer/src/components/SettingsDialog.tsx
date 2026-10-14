@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CATEGORIES } from '@shared/categories'
 import { MAX_CONNECTIONS } from '@shared/defaults'
-import type { Settings, StorageCategoryId } from '@shared/types'
+import type { BrowserBridgeInfo, Settings, StorageCategoryId } from '@shared/types'
 import { useApp } from '../state/store'
 import { Dialog } from './Dialog'
 import { IconFolder, IconRefresh } from './Icons'
@@ -25,6 +25,18 @@ export function SettingsDialog(): JSX.Element {
   const [speedLimitKb, setSpeedLimitKb] = useState(() => String(bytesToKb(loaded?.speedLimit ?? 0)))
 
   const api = window.riptide
+
+  const [bridge, setBridge] = useState<BrowserBridgeInfo | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    void api.app.browserBridge().then((info) => {
+      if (alive) setBridge(info)
+    })
+    return () => {
+      alive = false
+    }
+  }, [api])
 
   const patch = <K extends keyof Settings>(key: K, value: Settings[K]): void =>
     setDraft((current) => (current ? { ...current, [key]: value } : current))
@@ -106,12 +118,7 @@ export function SettingsDialog(): JSX.Element {
     { key: 'minimizeToTray', title: 'Minimize to tray', desc: 'Keep running in the background when minimized.' },
     { key: 'closeToTray', title: 'Close to tray', desc: 'Keep running when the window is closed.' },
     { key: 'launchOnStartup', title: 'Launch at login', desc: 'Start Riptide with Windows.' },
-    { key: 'autoCheckUpdates', title: 'Check for updates', desc: 'Look for new versions on startup.' },
-    {
-      key: 'catchServer',
-      title: 'Local catch endpoint',
-      desc: `Listen on 127.0.0.1:${draft.catchServerPort} for browser-extension captures.`
-    }
+    { key: 'autoCheckUpdates', title: 'Check for updates', desc: 'Look for new versions on startup.' }
   ]
 
   return (
@@ -325,38 +332,102 @@ export function SettingsDialog(): JSX.Element {
           />
         </div>
 
-        <div className="grid-2">
-          <div className="field">
-            <label className="field__label" htmlFor="set-channel">
-              Update channel
-            </label>
-            <select
-              id="set-channel"
-              className="select"
-              value={draft.updateChannel}
-              onChange={(e) => patch('updateChannel', e.target.value as Settings['updateChannel'])}
-            >
-              <option value="stable">Stable</option>
-              <option value="beta">Beta</option>
-            </select>
-          </div>
+        <div className="field">
+          <label className="field__label" htmlFor="set-channel">
+            Update channel
+          </label>
+          <select
+            id="set-channel"
+            className="select"
+            value={draft.updateChannel}
+            onChange={(e) => patch('updateChannel', e.target.value as Settings['updateChannel'])}
+          >
+            <option value="stable">Stable</option>
+            <option value="beta">Beta</option>
+          </select>
+        </div>
+      </div>
 
-          <div className="field">
-            <label className="field__label" htmlFor="set-port">
-              Catch endpoint port
-            </label>
-            <input
-              id="set-port"
-              className="input"
-              type="number"
-              min={1024}
-              max={65535}
-              value={draft.catchServerPort}
-              onChange={(e) =>
-                patch('catchServerPort', Math.max(1024, Math.min(65535, Number(e.target.value) || 7777)))
-              }
-            />
+      <div className="settings__section">
+        <div className="settings__title">Browser integration</div>
+
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={draft.catchServer}
+            onChange={(e) => patch('catchServer', e.target.checked)}
+          />
+          <span className="switch__text">
+            <span className="switch__title">Local catch endpoint</span>
+            <span className="switch__desc">
+              Let the Riptide browser extension hand links to the app.
+            </span>
+          </span>
+        </label>
+
+        <div className="field">
+          <span className="field__label">Endpoint status</span>
+          <div className="bridge" data-state={bridge?.running ? 'on' : 'off'}>
+            <span className="bridge__dot" aria-hidden="true" />
+            <span>
+              {bridge
+                ? bridge.running
+                  ? `Listening on 127.0.0.1:${bridge.port}`
+                  : draft.catchServer
+                    ? 'Not listening'
+                    : 'Disabled'
+                : 'Checking…'}
+            </span>
           </div>
+          <span className="field__help">
+            The endpoint binds to this machine only and is never exposed to your network.
+          </span>
+        </div>
+
+        <div className="field">
+          <label className="field__label" htmlFor="set-port">
+            Catch endpoint port
+          </label>
+          <input
+            id="set-port"
+            className="input"
+            type="number"
+            min={1024}
+            max={65535}
+            value={draft.catchServerPort}
+            onChange={(e) =>
+              patch('catchServerPort', Math.max(1024, Math.min(65535, Number(e.target.value) || 7777)))
+            }
+          />
+          <span className="field__help">Must match “App port” in the extension popup.</span>
+        </div>
+
+        <div className="field">
+          <label className="field__label" htmlFor="set-ext-path">
+            Extension folder
+          </label>
+          <div className="field__row">
+            <input
+              id="set-ext-path"
+              className="input"
+              readOnly
+              spellCheck={false}
+              value={bridge?.extensionPath ?? ''}
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <button
+              type="button"
+              className="btn btn--bordered"
+              disabled={!bridge}
+              onClick={() => void api.app.openExtensionFolder()}
+            >
+              Open folder
+            </button>
+          </div>
+          <span className="field__help">
+            In Chrome or Edge open <code>chrome://extensions</code>, switch on Developer mode, then
+            “Load unpacked” and choose this folder.
+          </span>
         </div>
       </div>
 

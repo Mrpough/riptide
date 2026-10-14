@@ -8,10 +8,10 @@ import {
   type OpenDialogOptions,
   type SaveDialogOptions
 } from 'electron'
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { IPC } from '@shared/channels'
 import { APP_NAME } from '@shared/defaults'
-import type { AddDownloadInput, AppInfo, Settings } from '@shared/types'
+import type { AddDownloadInput, AppInfo, BrowserBridgeInfo, Settings } from '@shared/types'
 import type { DownloadManager } from './download/manager'
 import { logFilePath } from './logger'
 import type { SettingsService } from './settings'
@@ -34,8 +34,19 @@ function windowFor(event: IpcMainInvokeEvent): BrowserWindow | null {
   return BrowserWindow.fromWebContents(event.sender)
 }
 
+/**
+ * Where the unpacked browser extension lives. In a packaged build it is copied
+ * next to the app by electron-builder's extraResources; in development it sits
+ * in the repository.
+ */
+function extensionDir(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'extension')
+    : join(app.getAppPath(), 'extension')
+}
+
 export function registerIpc(ctx: IpcContext): void {
-  const { manager, settings, updater } = ctx
+  const { manager, settings, updater, catchServer } = ctx
 
   const broadcast = (channel: string, payload: unknown): void => {
     const window = ctx.getWindow()
@@ -203,6 +214,23 @@ export function registerIpc(ctx: IpcContext): void {
   ipcMain.handle(IPC.appSetLaunchOnStartup, (_e, enabled: boolean) => {
     app.setLoginItemSettings({ openAtLogin: Boolean(enabled) })
     return app.getLoginItemSettings().openAtLogin
+  })
+
+  // ---- browser integration ----------------------------------------------
+  ipcMain.handle(IPC.appBrowserBridge, (): BrowserBridgeInfo => {
+    const current = settings.get()
+    const port = catchServer.running ? catchServer.port : current.catchServerPort
+    return {
+      running: Boolean(current.catchServer) && catchServer.running,
+      port,
+      endpoint: `http://127.0.0.1:${port}/add`,
+      extensionPath: extensionDir()
+    }
+  })
+
+  ipcMain.handle(IPC.appOpenExtensionFolder, async () => {
+    const error = await shell.openPath(extensionDir())
+    return error ? { ok: false, error } : { ok: true }
   })
 
   // ---- updates -----------------------------------------------------------

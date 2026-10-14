@@ -69,7 +69,9 @@ const api: RiptideApi = {
     info: (): Promise<AppInfo> => ipcRenderer.invoke(IPC.appInfo),
     diskUsage: () => ipcRenderer.invoke(IPC.appDiskUsage),
     openLogs: () => ipcRenderer.invoke(IPC.appOpenLogs),
-    setLaunchOnStartup: (enabled: boolean) => ipcRenderer.invoke(IPC.appSetLaunchOnStartup, enabled)
+    setLaunchOnStartup: (enabled: boolean) => ipcRenderer.invoke(IPC.appSetLaunchOnStartup, enabled),
+    browserBridge: () => ipcRenderer.invoke(IPC.appBrowserBridge),
+    openExtensionFolder: () => ipcRenderer.invoke(IPC.appOpenExtensionFolder)
   },
   update: {
     state: (): Promise<UpdateState> => ipcRenderer.invoke(IPC.updateState),

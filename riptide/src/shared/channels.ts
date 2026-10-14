@@ -50,6 +50,8 @@ export const IPC = {
   appDiskUsage: 'app:disk-usage',
   appOpenLogs: 'app:open-logs',
   appSetLaunchOnStartup: 'app:set-launch-on-startup',
+  appBrowserBridge: 'app:browser-bridge',
+  appOpenExtensionFolder: 'app:open-extension-folder',
 
   // ---- updates ----
   updateCheck: 'update:check',

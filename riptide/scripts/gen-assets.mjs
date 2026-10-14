@@ -13,6 +13,7 @@ import { buildIco, encodePng, renderIcon } from '../src/main/icon-render.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const resources = join(root, 'resources')
+const extensionIcons = join(root, 'extension', 'icons')
 
 const png = (size) => encodePng(size, size, renderIcon(size, true))
 
@@ -25,4 +26,14 @@ await fs.writeFile(
   buildIco([256, 128, 64, 48, 32, 16].map((size) => ({ size, png: png(size) })))
 )
 
-console.log('Generated resources/icon.png, resources/icon.ico and resources/tray.png')
+// The browser extension ships its own copy of the mark so the folder can be
+// loaded unpacked straight from a checkout.
+await fs.mkdir(extensionIcons, { recursive: true })
+for (const size of [16, 32, 48, 128]) {
+  await fs.writeFile(join(extensionIcons, `icon${size}.png`), png(size))
+}
+
+console.log(
+  'Generated resources/icon.png, resources/icon.ico, resources/tray.png ' +
+    'and extension/icons/icon{16,32,48,128}.png'
+)

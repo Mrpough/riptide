@@ -12,6 +12,15 @@ files:
   - '!**/*.map'
   - '!**/{.eslintrc,.prettierrc,tsconfig*.json,electron.vite.config.ts}'
 
+# The unpacked browser extension is copied verbatim so the app can point users
+# at it (and open it) after installation.
+extraResources:
+  - from: extension
+    to: extension
+    filter:
+      - '**/*'
+      - '!README.md'
+
 asar: true
 
 win:

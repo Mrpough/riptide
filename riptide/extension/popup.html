@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Riptide</title>
+  </head>
+  <body>
+    <header class="head">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+          <path
+            d="M12 3v10m0 0 4-4m-4 4-4-4M5 19h14"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
+      <div class="head__text">
+        <strong>Riptide</strong>
+        <span class="status" id="status" data-state="unknown">
+          <i class="dot" aria-hidden="true"></i>
+          <span id="status-text">Checking…</span>
+        </span>
+      </div>
+      <button class="retry" id="retry" type="button" title="Recheck app status">↻</button>
+    </header>
+
+    <main class="body">
+      <label class="label" for="url">Link to download</label>
+      <input
+        id="url"
+        class="input"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="https://example.com/file.zip"
+      />
+
+      <input
+        id="filename"
+        class="input"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="Save as (optional)"
+      />
+
+      <button id="send" class="btn btn--primary" type="button">Send to Riptide</button>
+      <p id="message" class="message" data-tone="info" role="status" aria-live="polite"></p>
+
+      <hr class="divider" />
+
+      <label class="switch">
+        <input id="intercept" type="checkbox" />
+        <span class="switch__text">
+          <span class="switch__title">Catch browser downloads</span>
+          <span class="switch__desc">Route Chrome downloads to Riptide</span>
+        </span>
+      </label>
+
+      <div class="field">
+        <label class="label" for="port">App port</label>
+        <input id="port" class="input input--short" type="number" min="1024" max="65535" />
+        <span class="help">Must match Settings › Browser integration in the app.</span>
+      </div>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
