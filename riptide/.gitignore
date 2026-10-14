@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+release/
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.local
+*.tsbuildinfo
+resources/icon.ico
+resources/icon.png
+resources/tray.png
+resources/tray@2x.png

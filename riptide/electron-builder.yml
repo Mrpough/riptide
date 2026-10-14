@@ -1,0 +1,57 @@
+appId: com.riptide.dm
+productName: Riptide
+copyright: Copyright © 2026 Riptide
+
+directories:
+  buildResources: resources
+  output: release/${version}
+
+files:
+  - out/**
+  - package.json
+  - '!**/*.map'
+  - '!**/{.eslintrc,.prettierrc,tsconfig*.json,electron.vite.config.ts}'
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icon.ico
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Riptide
+  deleteAppDataOnUninstall: false
+
+mac:
+  target:
+    - dmg
+    - zip
+  icon: resources/icon.png
+  category: public.app-category.utilities
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: resources/icon.png
+  category: Network
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+# Used by electron-updater. Replace owner/repo with your GitHub repository.
+# The release must be built with a GH_TOKEN that can create releases.
+publish:
+  provider: github
+  owner: YOUR_GITHUB_USERNAME
+  repo: riptide
+  releaseType: release
