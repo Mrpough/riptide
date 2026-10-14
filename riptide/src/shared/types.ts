@@ -27,6 +27,19 @@ export type DownloadStatus =
   | 'error'
   | 'stopped'
 
+/** How a transfer is fetched: a plain file, or a segmented streaming playlist. */
+export type DownloadKind = 'http' | 'hls' | 'dash'
+
+/** Extra bookkeeping for manifest (hls/dash) downloads. */
+export interface StreamState {
+  /** Variant chosen from a master playlist, so a resume stays on the same stream. */
+  variantUri?: string
+  /** Whether the fMP4 initialisation segment has been written. */
+  initDone: boolean
+  /** Human label for the selected quality, e.g. "1080p". */
+  quality?: string
+}
+
 /** Per-segment byte range and progress. Kept in the main process only. */
 export interface DownloadSegment {
   index: number
@@ -53,6 +66,10 @@ export interface DownloadItem {
   /** Absolute path of the destination file. */
   filePath: string
   category: StorageCategoryId
+  /** Transport: a plain HTTP file or a segmented streaming playlist. */
+  kind: DownloadKind
+  /** Present only for hls/dash items. */
+  stream?: StreamState
   status: DownloadStatus
   /** Total size in bytes, or -1 when the server does not report one. */
   size: number
@@ -96,6 +113,9 @@ export interface DownloadView {
   saveDir: string
   filePath: string
   category: StorageCategoryId
+  kind: DownloadKind
+  /** Present only for hls/dash items. */
+  stream?: StreamState
   status: DownloadStatus
   size: number
   downloaded: number
@@ -171,6 +191,8 @@ export interface AddDownloadInput {
   fileName?: string
   connections?: number
   category?: StorageCategoryId
+  /** Force a transport instead of detecting it from the URL. */
+  kind?: DownloadKind
   referrer?: string
   /** Start immediately instead of queueing. */
   startNow?: boolean

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CATEGORIES } from '@shared/categories'
 import { formatBytes } from '@shared/format'
+import { isStreamKind, kindFromMime, kindFromUrl } from '@shared/stream'
 import type { AddDownloadInput, ProbePreview, StorageCategoryId } from '@shared/types'
 import { useApp } from '../state/store'
 import { Dialog } from './Dialog'
@@ -59,6 +60,21 @@ export function AddDownloadDialog(): JSX.Element {
   const urls = useMemo(() => splitUrls(url), [url])
   const singleUrl = urls.length === 1 ? urls[0] : null
 
+  // A streaming playlist is either obvious from the URL, or revealed by the
+  // probe's Content-Type once the server answers.
+  const streamKind = useMemo(() => {
+    const fromUrl = singleUrl ? kindFromUrl(singleUrl) : 'http'
+    if (fromUrl !== 'http') return fromUrl
+    return probe.preview ? (kindFromMime(probe.preview.mimeType) ?? 'http') : 'http'
+  }, [singleUrl, probe.preview])
+
+  const streamLabel =
+    streamKind === 'hls'
+      ? 'HLS playlist (segmented)'
+      : streamKind === 'dash'
+        ? 'DASH manifest (segmented)'
+        : null
+
   // Keep the default save directory in sync until the user edits it.
   const dirEdited = useRef(false)
   useEffect(() => {
@@ -108,13 +124,17 @@ export function AddDownloadDialog(): JSX.Element {
     try {
       const headers = parseHeaders(headersText)
       if (urls.length > 1) {
-        const inputs: AddDownloadInput[] = urls.map((u) => ({
-          url: u,
-          saveDir: saveDir || undefined,
-          connections,
-          startNow,
-          ...(headers ? { headers } : {})
-        }))
+        const inputs: AddDownloadInput[] = urls.map((u) => {
+          const kind = kindFromUrl(u)
+          return {
+            url: u,
+            saveDir: saveDir || undefined,
+            connections,
+            startNow,
+            ...(isStreamKind(kind) ? { kind } : {}),
+            ...(headers ? { headers } : {})
+          }
+        })
         const results = await api.downloads.addBatch(inputs)
         const failed = results.filter((r) => !r.ok)
         if (failed.length > 0) {
@@ -132,6 +152,7 @@ export function AddDownloadDialog(): JSX.Element {
         }
         if (fileName.trim()) input.fileName = fileName.trim()
         if (category) input.category = category
+        if (isStreamKind(streamKind)) input.kind = streamKind
         const result = await api.downloads.add(input)
         if (result.ok) closeAddDialog()
         else setSubmitError(result.error ?? 'Could not start the download.')
@@ -198,12 +219,15 @@ export function AddDownloadDialog(): JSX.Element {
           {!probe.loading && !probe.error && preview && (
             <>
               <b>{preview.fileName}</b>
-              <span>{formatBytes(preview.size)}</span>
-              <span>{preview.supportsRanges ? 'resumable' : 'single connection'}</span>
+              <span>{preview.size > 0 ? formatBytes(preview.size) : 'size unknown'}</span>
+              <span>{streamLabel ?? (preview.supportsRanges ? 'resumable' : 'single connection')}</span>
             </>
           )}
           {!probe.loading && !probe.error && !preview && (
-            <span>{singleUrl ? 'Checking the link…' : 'Add one link to check server support.'}</span>
+            <span>
+              {streamLabel ??
+                (singleUrl ? 'Checking the link…' : 'Add one link to check server support.')}
+            </span>
           )}
         </div>
       </div>

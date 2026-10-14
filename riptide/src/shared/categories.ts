@@ -53,7 +53,7 @@ register('music', [
 
 register('video', [
   'mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg',
-  'ts', 'm2ts', '3gp', 'ogv', 'vob', 'rmvb', 'divx'
+  'ts', 'm2ts', '3gp', 'ogv', 'vob', 'rmvb', 'divx', 'm3u8', 'm3u', 'mpd', 'm4s'
 ])
 
 register('programs', [
@@ -67,6 +67,7 @@ const MIME_MAP: Array<[RegExp, StorageCategoryId]> = [
   [/^application\/(pdf|msword|vnd\.openxmlformats|vnd\.ms-excel|vnd\.ms-powerpoint|rtf|epub|json|xml|vnd\.oasis)/, 'documents'],
   [/^text\//, 'documents'],
   [/^audio\//, 'music'],
+  [/^(application\/(vnd\.apple\.mpegurl|x-mpegurl|dash\+xml)|audio\/(mpegurl|x-mpegurl))/, 'video'],
   [/^video\//, 'video'],
   [/^application\/(x-msdownload|x-msdos-program|x-msi|x-appimage|x-deb|x-rpm|vnd\.android\.package-archive|octet-stream)/, 'programs']
 ]

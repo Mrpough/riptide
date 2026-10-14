@@ -14,9 +14,18 @@ interface ProgressRailProps {
 export const ProgressRail = memo<ProgressRailProps>(function ProgressRail({
   item
 }: ProgressRailProps): JSX.Element {
-  const totalKnown = item.size > 0
-  const fraction = totalKnown ? Math.min(1, item.downloaded / item.size) : 0
   const segs = item.segmentProgress
+  const isStream = item.kind !== 'http'
+  const totalKnown = item.size > 0
+  // Streams have no known byte total up front, so fall back to segment count.
+  const segmentSum = segs.reduce((sum, value) => sum + value, 0)
+  const fraction = totalKnown
+    ? Math.min(1, item.downloaded / item.size)
+    : item.status === 'completed'
+      ? 1
+      : segs.length > 0
+        ? segmentSum / segs.length
+        : 0
 
   return (
     <div className="rail" data-status={item.status}>
@@ -29,7 +38,7 @@ export const ProgressRail = memo<ProgressRailProps>(function ProgressRail({
         aria-label={`${item.fileName} progress`}
       >
         <div className="rail__fill" style={{ width: `${(fraction * 100).toFixed(2)}%` }} />
-        {segs.length > 1 && (
+        {segs.length > (isStream ? 0 : 1) && (
           <div className="rail__segs" aria-hidden="true">
             {segs.map((_, index) => (
               <span key={index} className="rail__seg" />
@@ -38,10 +47,11 @@ export const ProgressRail = memo<ProgressRailProps>(function ProgressRail({
         )}
       </div>
       <div className="rail__meta">
-        <b>{totalKnown ? formatPercent(fraction) : `${item.downloaded > 0 ? '?' : '0%'}`}</b>
+        <b>{totalKnown || isStream ? formatPercent(fraction) : `${item.downloaded > 0 ? '?' : '0%'}`}</b>
         <span>
           {formatBytes(item.downloaded)}
           {totalKnown ? ` / ${formatBytes(item.size)}` : ''}
+          {isStream && segs.length > 0 ? ` · ${Math.round(segmentSum)}/${segs.length}` : ''}
         </span>
       </div>
     </div>

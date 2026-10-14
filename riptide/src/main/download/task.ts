@@ -27,21 +27,33 @@ export class RemoteChangedError extends Error {
   }
 }
 
+/** The task surface the manager drives and observes, whatever the transport. */
+export interface TrackedTask {
+  readonly id: string
+  readonly item: DownloadItem
+  readonly isRunning: boolean
+  readonly openConnections: number
+  start(options?: { restart?: boolean }): Promise<void>
+  pause(): void
+  stop(): void
+  resetProgress(): void
+}
+
 export interface TaskHost {
   limiter: SpeedLimiter
   dispatcher(): Dispatcher
   settings(): Settings
   resolveDir(category: StorageCategoryId): string
   takenPaths(excludeId: string): Set<string>
-  onProgress(task: DownloadTask): void
-  onStateChange(task: DownloadTask): void
-  onFinished(task: DownloadTask): void
+  onProgress(task: TrackedTask): void
+  onStateChange(task: TrackedTask): void
+  onFinished(task: TrackedTask): void
   log: Logger
 }
 
 const FATAL_STATUS = new Set([400, 401, 403, 404, 405, 409, 410, 451])
 
-export class DownloadTask {
+export class DownloadTask implements TrackedTask {
   readonly id: string
   item: DownloadItem
   private readonly host: TaskHost

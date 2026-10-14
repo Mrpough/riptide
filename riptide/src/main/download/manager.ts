@@ -3,6 +3,7 @@ import { basename, join } from 'node:path'
 import type { Dispatcher } from 'undici'
 import { categoryFolder, detectCategory } from '@shared/categories'
 import { MAX_CONNECTIONS, MIN_CONNECTIONS, TUNING } from '@shared/defaults'
+import { isStreamKind, kindFromMime, kindFromUrl } from '@shared/stream'
 import type {
   AddDownloadInput,
   AddResult,
@@ -19,7 +20,8 @@ import { resolveFileName, sanitizeFileName } from '../download/filename'
 import { createDispatcher, probe } from '../download/net'
 import { reconcileSegments } from '../download/segments'
 import { SpeedLimiter } from '../download/speed-limiter'
-import { DownloadTask, type TaskHost } from '../download/task'
+import { StreamTask } from '../download/stream-task'
+import { DownloadTask, type TaskHost, type TrackedTask } from '../download/task'
 import type { SettingsService } from '../settings'
 import type { JsonStore } from '../store'
 import { clamp, createId, errorMessage, partPath, uniqueFileNameOnDisk } from '../utils'
@@ -40,6 +42,8 @@ export function toView(item: DownloadItem): DownloadView {
     saveDir: item.saveDir,
     filePath: item.filePath,
     category: item.category,
+    kind: item.kind,
+    stream: item.stream,
     status: item.status,
     size: item.size,
     downloaded: item.downloaded,
@@ -68,7 +72,7 @@ export class DownloadManager implements TaskHost {
   private disconnecting: Promise<void> | null = null
 
   private items = new Map<string, DownloadItem>()
-  private tasks = new Map<string, DownloadTask>()
+  private tasks = new Map<string, TrackedTask>()
 
   private persistTimer: NodeJS.Timeout | null = null
   private statsTimer: NodeJS.Timeout | null = null
@@ -101,10 +105,15 @@ export class DownloadManager implements TaskHost {
 
       item.speed = 0
       item.eta = null
+      if (!item.kind) item.kind = 'http'
+      if (isStreamKind(item.kind) && !item.stream) item.stream = { initDone: false }
       if (!Array.isArray(item.segments)) item.segments = []
       if (item.segments.length > 0) {
         item.segments = reconcileSegments(item.segments, item.size)
-        item.downloaded = item.segments.reduce((sum, seg) => sum + seg.downloaded, 0)
+        // Stream progress is tracked per segment, so the byte total stays authoritative.
+        if (item.kind === 'http') {
+          item.downloaded = item.segments.reduce((sum, seg) => sum + seg.downloaded, 0)
+        }
       }
 
       if (item.status === 'downloading' || item.status === 'connecting') {
@@ -171,6 +180,7 @@ export class DownloadManager implements TaskHost {
     const explicitName = input.fileName?.trim()
     const guessedName = explicitName || safeDecode(basename(parsed.pathname)) || parsed.hostname
     const category = input.category ?? detectCategory(guessedName, undefined)
+    const kind = input.kind ?? kindFromUrl(url)
 
     const item: DownloadItem = {
       id: createId(),
@@ -181,6 +191,7 @@ export class DownloadManager implements TaskHost {
       saveDir: input.saveDir?.trim() || this.resolveDir(category),
       filePath: '',
       category,
+      kind,
       status: input.startNow === false ? 'stopped' : 'queued',
       size: -1,
       downloaded: 0,
@@ -194,6 +205,8 @@ export class DownloadManager implements TaskHost {
       priority: 0,
       createdAt: Date.now()
     }
+
+    if (isStreamKind(kind)) item.stream = { initDone: false }
 
     const taken = new Set<string>()
     for (const existing of this.items.values()) taken.add(existing.filePath.toLowerCase())
@@ -216,13 +229,28 @@ export class DownloadManager implements TaskHost {
     const item = this.items.get(id)
     if (!item || item.downloaded > 0 || item.status === 'completed') return
     if (item.size > 0) return
+    // Streaming items resolve their own metadata from the manifest.
+    if (isStreamKind(item.kind)) return
     try {
       const preview = await this.probeUrl(item.url, item.requestHeaders)
       const current = this.items.get(id)
-      if (!current || current.downloaded > 0) return
-      current.size = preview.size
-      current.mimeType = preview.mimeType
+      if (!current || current.downloaded > 0 || isStreamKind(current.kind)) return
       current.finalUrl = preview.url
+      current.mimeType = preview.mimeType
+      const detected = !this.tasks.get(id)?.isRunning ? kindFromMime(preview.mimeType) : null
+      if (detected) {
+        // A playlist URL that did not look like one: switch to the stream engine.
+        current.kind = detected
+        current.stream = { initDone: false }
+        current.size = -1
+        current.supportsRanges = false
+        current.resumable = true
+        this.tasks.delete(id)
+        this.emitItem(current)
+        this.schedulePersist()
+        return
+      }
+      current.size = preview.size
       current.supportsRanges = preview.supportsRanges
       current.resumable = preview.supportsRanges && preview.size > 0
       if (!current.customName && preview.fileName) {
@@ -492,10 +520,10 @@ export class DownloadManager implements TaskHost {
     return active
   }
 
-  private ensureTask(item: DownloadItem): DownloadTask {
+  private ensureTask(item: DownloadItem): TrackedTask {
     let task = this.tasks.get(item.id)
     if (!task) {
-      task = new DownloadTask(item, this)
+      task = item.kind === 'http' ? new DownloadTask(item, this) : new StreamTask(item, this)
       this.tasks.set(item.id, task)
     }
     return task
@@ -528,17 +556,17 @@ export class DownloadManager implements TaskHost {
     return set
   }
 
-  onProgress(task: DownloadTask): void {
+  onProgress(task: TrackedTask): void {
     this.onItem?.(toView(task.item))
   }
 
-  onStateChange(task: DownloadTask): void {
+  onStateChange(task: TrackedTask): void {
     this.emitItem(task.item)
     this.schedulePersist()
     this.pump()
   }
 
-  onFinished(task: DownloadTask): void {
+  onFinished(task: TrackedTask): void {
     if (task.item.status === 'completed') {
       this.onCompleted?.(toView(task.item))
     }

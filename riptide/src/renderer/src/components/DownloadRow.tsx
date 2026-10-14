@@ -103,7 +103,11 @@ export const DownloadRow = memo<DownloadRowProps>(function DownloadRow({
           </span>
           <span className="row__sub" title={item.url}>
             {hostOf(item.url)}
-            {item.status === 'downloading' && ` · ${item.connections} segs`}
+            {item.kind !== 'http'
+              ? ` · ${item.kind.toUpperCase()}${item.stream?.quality ? ` ${item.stream.quality}` : ''}`
+              : item.status === 'downloading'
+                ? ` · ${item.connections} segs`
+                : ''}
             {item.error && item.status === 'error' ? ` · ${truncateMiddle(item.error, 48)}` : ''}
           </span>
         </span>
