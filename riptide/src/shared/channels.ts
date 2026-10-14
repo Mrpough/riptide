@@ -59,6 +59,13 @@ export const IPC = {
   updateInstall: 'update:install',
   updateState: 'update:get-state',
 
+  // ---- site spider (renderer -> main, invoke) ----
+  spiderStart: 'spider:start',
+  spiderStop: 'spider:stop',
+  spiderSnapshot: 'spider:snapshot',
+  spiderClear: 'spider:clear',
+  spiderAdd: 'spider:add',
+
   // ---- main -> renderer (send) ----
   evDownloadsList: 'ev:downloads:list',
   evDownloadItem: 'ev:downloads:item',
@@ -69,6 +76,7 @@ export const IPC = {
   evClipboardUrl: 'ev:clipboard:url',
   evSettings: 'ev:settings',
   evWindowMaximized: 'ev:window:maximized',
+  evSpider: 'ev:spider',
   evNavigate: 'ev:navigate'
 } as const
 

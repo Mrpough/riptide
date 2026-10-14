@@ -6,6 +6,7 @@ import {
   IconPlay,
   IconPlus,
   IconSearch,
+  IconSpider,
   IconStop,
   IconX
 } from './Icons'
@@ -17,6 +18,7 @@ export function Toolbar(): JSX.Element {
   const search = useApp((s) => s.search)
   const openAddDialog = useApp((s) => s.openAddDialog)
   const openSettings = useApp((s) => s.openSettings)
+  const openGrabber = useApp((s) => s.openGrabber)
   const setSearch = useApp((s) => s.setSearch)
 
   const api = window.riptide
@@ -105,6 +107,16 @@ export function Toolbar(): JSX.Element {
           </button>
         )}
       </div>
+
+      <button
+        type="button"
+        className="btn"
+        title="Site grabber"
+        onClick={openGrabber}
+      >
+        <IconSpider size={14} />
+        Grabber
+      </button>
 
       <button
         type="button"

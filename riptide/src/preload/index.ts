@@ -10,6 +10,7 @@ import type {
 } from '@shared/types'
 import type { TransferStats } from '@shared/channels'
 import type { RiptideApi } from './api'
+import type { SpiderOptions, SpiderState } from '@shared/spider'
 
 /** Subscribe to a main->renderer channel and return an unsubscribe function. */
 function subscribe<T>(channel: string, callback: (payload: T) => void): () => void {
@@ -79,6 +80,13 @@ const api: RiptideApi = {
     download: () => ipcRenderer.invoke(IPC.updateDownload),
     install: () => ipcRenderer.invoke(IPC.updateInstall)
   },
+  spider: {
+    start: (options: SpiderOptions) => ipcRenderer.invoke(IPC.spiderStart, options),
+    stop: () => ipcRenderer.invoke(IPC.spiderStop),
+    snapshot: () => ipcRenderer.invoke(IPC.spiderSnapshot),
+    clear: () => ipcRenderer.invoke(IPC.spiderClear),
+    add: (urls: string[]) => ipcRenderer.invoke(IPC.spiderAdd, urls)
+  },
   events: {
     onDownloadItem: (cb) => subscribe<DownloadView>(IPC.evDownloadItem, cb),
     onDownloadsList: (cb) => subscribe<DownloadView[]>(IPC.evDownloadsList, cb),
@@ -88,7 +96,8 @@ const api: RiptideApi = {
     onNotice: (cb) => subscribe<Notice>(IPC.evNotice, cb),
     onClipboardUrl: (cb) => subscribe<string>(IPC.evClipboardUrl, cb),
     onSettings: (cb) => subscribe<Settings>(IPC.evSettings, cb),
-    onWindowMaximized: (cb) => subscribe<boolean>(IPC.evWindowMaximized, cb)
+    onWindowMaximized: (cb) => subscribe<boolean>(IPC.evWindowMaximized, cb),
+    onSpider: (cb) => subscribe<SpiderState>(IPC.evSpider, cb)
   }
 }
 

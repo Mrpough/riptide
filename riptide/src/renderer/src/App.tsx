@@ -6,6 +6,7 @@ import { ContextMenu } from './components/ContextMenu'
 import { DownloadTable } from './components/DownloadTable'
 import { SettingsDialog } from './components/SettingsDialog'
 import { Sidebar } from './components/Sidebar'
+import { SiteGrabberDialog } from './components/SiteGrabberDialog'
 import { StatusBar } from './components/StatusBar'
 import { TitleBar } from './components/TitleBar'
 import { Toasts } from './components/Toasts'
@@ -28,6 +29,7 @@ export function App(): JSX.Element {
   const settings = useApp((s) => s.settings)
   const addDialogOpen = useApp((s) => s.addDialogOpen)
   const settingsOpen = useApp((s) => s.settingsOpen)
+  const grabberOpen = useApp((s) => s.grabberOpen)
   const contextMenu = useApp((s) => s.contextMenu)
 
   const visible = useMemo(
@@ -47,7 +49,7 @@ export function App(): JSX.Element {
       }
 
       if (isTypingTarget(event.target)) return
-      if (state.addDialogOpen || state.settingsOpen) return
+      if (state.addDialogOpen || state.settingsOpen || state.grabberOpen) return
 
       if (mod && event.key.toLowerCase() === 'a') {
         event.preventDefault()
@@ -102,6 +104,7 @@ export function App(): JSX.Element {
       <StatusBar />
 
       {settingsOpen && settings && <SettingsDialog />}
+      {grabberOpen && <SiteGrabberDialog />}
       {addDialogOpen && <AddDownloadDialog />}
       {contextMenu && <ContextMenu />}
       <Toasts />

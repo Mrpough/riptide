@@ -6,6 +6,7 @@ import type { DownloadItem, Settings } from '@shared/types'
 import { DownloadManager } from './download/manager'
 import { CatchServer } from './integrations/catch-server'
 import { ClipboardMonitor } from './integrations/clipboard'
+import { SiteSpider } from './integrations/spider'
 import { registerIpc } from './ipc'
 import { log } from './logger'
 import { notifyDownloadComplete } from './notifications'
@@ -24,6 +25,7 @@ let settingsService: SettingsService
 let manager: DownloadManager
 let clipboard: ClipboardMonitor
 let catchServer: CatchServer
+let spider: SiteSpider
 let updater: UpdateService
 
 let quitting = false
@@ -98,6 +100,7 @@ async function shutdown(): Promise<void> {
   log.info('shutting down')
   clipboard.stop()
   updater.stop()
+  spider.dispose()
   await catchServer.stop().catch(() => undefined)
   tray?.destroy()
   await manager.dispose().catch((err) => log.error('manager dispose failed', err))
@@ -128,6 +131,13 @@ async function main(): Promise<void> {
       })
   })
 
+  spider = new SiteSpider({
+    getSettings: () => settingsService.get(),
+    dispatcher: () => manager.dispatcher(),
+    onState: (state) => send(IPC.evSpider, state),
+    log: log.child('spider')
+  })
+
   updater = new UpdateService({
     onState: (state) => send(IPC.evUpdate, state),
     autoCheck: () => settingsService.get().autoCheckUpdates,
@@ -140,6 +150,7 @@ async function main(): Promise<void> {
     settings: settingsService,
     updater,
     catchServer,
+    spider,
     clipboard,
     getWindow,
     applySettings,

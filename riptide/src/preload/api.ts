@@ -1,4 +1,5 @@
 import type { TransferStats } from '@shared/channels'
+import type { SpiderAddResult, SpiderOptions, SpiderSnapshot, SpiderState } from '@shared/spider'
 import type {
   AddDownloadInput,
   AddResult,
@@ -77,6 +78,16 @@ export interface RiptideApi {
     download(): Promise<void>
     install(): Promise<void>
   }
+  spider: {
+    /** Begin crawling a site. Resolves as soon as the crawl is queued. */
+    start(options: SpiderOptions): Promise<{ ok: boolean; error?: string }>
+    stop(): Promise<boolean>
+    /** Current crawl state plus everything found so far. */
+    snapshot(): Promise<SpiderSnapshot>
+    clear(): Promise<SpiderSnapshot>
+    /** Queue the given file URLs as downloads and report how many landed. */
+    add(urls: string[]): Promise<SpiderAddResult>
+  }
   events: {
     onDownloadItem(callback: (item: DownloadView) => void): () => void
     onDownloadsList(callback: (items: DownloadView[]) => void): () => void
@@ -87,5 +98,6 @@ export interface RiptideApi {
     onClipboardUrl(callback: (url: string) => void): () => void
     onSettings(callback: (settings: Settings) => void): () => void
     onWindowMaximized(callback: (maximized: boolean) => void): () => void
+    onSpider(callback: (state: SpiderState) => void): () => void
   }
 }

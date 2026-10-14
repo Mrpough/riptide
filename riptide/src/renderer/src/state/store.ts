@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { TransferStats } from '@shared/channels'
+import type { SpiderFile, SpiderState } from '@shared/spider'
 import type {
   AppInfo,
   CategoryId,
@@ -47,9 +48,12 @@ interface AppState {
   addDialogOpen: boolean
   addDialogInitialUrl: string
   settingsOpen: boolean
+  grabberOpen: boolean
   contextMenu: ContextMenuState | null
   clipboardSuggestion: string | null
   maximized: boolean
+  spiderState: SpiderState | null
+  spiderFiles: SpiderFile[]
 
   setMaximized: (maximized: boolean) => void
   setDownloads: (items: DownloadView[]) => void
@@ -76,6 +80,10 @@ interface AppState {
   closeAddDialog: () => void
   openSettings: () => void
   closeSettings: () => void
+  openGrabber: () => void
+  closeGrabber: () => void
+  setSpiderState: (state: SpiderState) => void
+  setSpiderFiles: (files: SpiderFile[]) => void
   openContextMenu: (menu: ContextMenuState) => void
   closeContextMenu: () => void
   setClipboardSuggestion: (url: string | null) => void
@@ -97,9 +105,12 @@ export const useApp = create<AppState>()((set) => ({
   addDialogOpen: false,
   addDialogInitialUrl: '',
   settingsOpen: false,
+  grabberOpen: false,
   contextMenu: null,
   clipboardSuggestion: null,
   maximized: false,
+  spiderState: null,
+  spiderFiles: [],
 
   setMaximized: (maximized) => set({ maximized }),
   setDownloads: (items) => set({ downloads: items }),
@@ -152,6 +163,10 @@ export const useApp = create<AppState>()((set) => ({
   closeAddDialog: () => set({ addDialogOpen: false, addDialogInitialUrl: '' }),
   openSettings: () => set({ settingsOpen: true }),
   closeSettings: () => set({ settingsOpen: false }),
+  openGrabber: () => set({ grabberOpen: true }),
+  closeGrabber: () => set({ grabberOpen: false }),
+  setSpiderState: (spiderState) => set({ spiderState }),
+  setSpiderFiles: (spiderFiles) => set({ spiderFiles }),
   openContextMenu: (contextMenu) => set({ contextMenu }),
   closeContextMenu: () => set({ contextMenu: null }),
   setClipboardSuggestion: (clipboardSuggestion) => set({ clipboardSuggestion })

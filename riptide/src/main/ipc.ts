@@ -11,6 +11,7 @@ import {
 import { dirname, join } from 'node:path'
 import { IPC } from '@shared/channels'
 import { APP_NAME } from '@shared/defaults'
+import type { SpiderAddResult, SpiderOptions, SpiderSnapshot } from '@shared/spider'
 import type { AddDownloadInput, AppInfo, BrowserBridgeInfo, Settings } from '@shared/types'
 import type { DownloadManager } from './download/manager'
 import { logFilePath } from './logger'
@@ -18,12 +19,14 @@ import type { SettingsService } from './settings'
 import type { UpdateService } from './updater'
 import type { CatchServer } from './integrations/catch-server'
 import type { ClipboardMonitor } from './integrations/clipboard'
+import type { SiteSpider } from './integrations/spider'
 
 export interface IpcContext {
   manager: DownloadManager
   settings: SettingsService
   updater: UpdateService
   catchServer: CatchServer
+  spider: SiteSpider
   clipboard: ClipboardMonitor
   getWindow: () => BrowserWindow | null
   applySettings: (settings: Settings) => Promise<void>
@@ -46,7 +49,7 @@ function extensionDir(): string {
 }
 
 export function registerIpc(ctx: IpcContext): void {
-  const { manager, settings, updater, catchServer } = ctx
+  const { manager, settings, updater, catchServer, spider } = ctx
 
   const broadcast = (channel: string, payload: unknown): void => {
     const window = ctx.getWindow()
@@ -231,6 +234,40 @@ export function registerIpc(ctx: IpcContext): void {
   ipcMain.handle(IPC.appOpenExtensionFolder, async () => {
     const error = await shell.openPath(extensionDir())
     return error ? { ok: false, error } : { ok: true }
+  })
+
+  // ---- site spider -------------------------------------------------------
+  ipcMain.handle(IPC.spiderStart, (_e, options: SpiderOptions) => spider.start(options))
+
+  ipcMain.handle(IPC.spiderStop, () => {
+    spider.stop()
+    return true
+  })
+
+  ipcMain.handle(IPC.spiderSnapshot, (): SpiderSnapshot => ({
+    state: spider.getState(),
+    files: spider.getFiles()
+  }))
+
+  ipcMain.handle(IPC.spiderClear, (): SpiderSnapshot => {
+    spider.clear()
+    return { state: spider.getState(), files: spider.getFiles() }
+  })
+
+  ipcMain.handle(IPC.spiderAdd, async (_e, urls: string[]): Promise<SpiderAddResult> => {
+    const requested = new Set(Array.isArray(urls) ? urls : [])
+    const inputs: AddDownloadInput[] = spider
+      .getFiles()
+      .filter((file) => requested.has(file.url))
+      .map((file) => ({
+        url: file.url,
+        fileName: file.fileName,
+        category: file.category,
+        referrer: file.pageUrl
+      }))
+    const results = await manager.addBatch(inputs)
+    const added = results.filter((result) => result.ok).length
+    return { ok: true, added, skipped: results.length - added }
   })
 
   // ---- updates -----------------------------------------------------------

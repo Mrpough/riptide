@@ -25,7 +25,8 @@ export function useAppEvents(): void {
         })
       ),
       api.events.onClipboardUrl((url) => useApp.getState().setClipboardSuggestion(url)),
-      api.events.onWindowMaximized((maximized) => useApp.getState().setMaximized(maximized))
+      api.events.onWindowMaximized((maximized) => useApp.getState().setMaximized(maximized)),
+      api.events.onSpider((state) => useApp.getState().setSpiderState(state))
     ]
 
     void (async () => {

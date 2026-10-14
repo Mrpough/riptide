@@ -233,3 +233,20 @@ export const IconCode = (p: IconProps): JSX.Element => (
     <path d="m8.5 8.5-4 3.5 4 3.5M15.5 8.5l4 3.5-4 3.5M13.5 5.5l-3 13" />
   </Icon>
 )
+
+export const IconRadar = (p: IconProps): JSX.Element => (
+  <Icon {...p}>
+    <path d="M12 12 4.6 6.5" />
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1.25" />
+  </Icon>
+)
+
+export const IconSpider = (p: IconProps): JSX.Element => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="3.25" />
+    <path d="M12 8.75V5M12 15.25V19M9 10.5 5.5 8.5M9 13.5l-3.5 2M15 10.5l3.5-2M15 13.5l3.5 2" />
+    <path d="M4.5 4.5 7 7M19.5 4.5 17 7M4.5 19.5 7 17M19.5 19.5 17 17" />
+  </Icon>
+)
